@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!--
+    IPFORGE — IPv4 Subnetting Calculator & Network Planning Tool
+    index.html — Main HTML structure and page layout
+  -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IPFORGE — IPv4 Subnetting Calculator</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════════════════
+       HEADER
+       ══════════════════════════════════════════════════════ -->
+  <header>
+    <!-- Decorative network-node dots -->
+    <div class="header-nodes" aria-hidden="true">
+      <div class="node-dot"></div>
+      <div class="node-dot"></div>
+      <div class="node-dot"></div>
+      <div class="node-dot"></div>
+      <div class="node-dot"></div>
+
+      <!-- SVG lines connecting the nodes visually -->
+      <svg class="header-svg" xmlns="http://www.w3.org/2000/svg">
+        <!-- Lines drawn between the node positions defined in CSS -->
+        <line x1="8%"  y1="18%" x2="14%" y2="70%" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+        <line x1="14%" y1="70%" x2="50%" y2="50%" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+        <line x1="50%" y1="50%" x2="88%" y2="30%" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+        <line x1="88%" y1="30%" x2="82%" y2="75%" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+        <line x1="8%"  y1="18%" x2="50%" y2="50%" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+      </svg>
+    </div>
+
+    <!-- Branding -->
+    <h1 class="header-logo" aria-label="IPFORGE">
+      <span>IP</span>FORGE
+    </h1>
+    <p class="header-subtitle">IPv4 Subnetting Calculator &amp; Network Planning Tool</p>
+  </header>
+
+  <!-- ══════════════════════════════════════════════════════
+       MAIN CONTENT
+       ══════════════════════════════════════════════════════ -->
+  <main>
+
+    <!-- ── CALCULATOR CARD ────────────────────────────────── -->
+    <section class="card" aria-labelledby="calc-heading">
+      <h2 class="card-title" id="calc-heading">
+        <span class="icon" aria-hidden="true">🖧</span>
+        IPv4 Subnet Calculator
+      </h2>
+
+      <!-- Input form -->
+      <div class="form-grid">
+
+        <!-- IPv4 Address -->
+        <div class="form-group">
+          <label for="ip-input">IPv4 Network Address</label>
+          <input
+            type="text"
+            id="ip-input"
+            placeholder="e.g. 192.168.1.0"
+            maxlength="15"
+            autocomplete="off"
+            spellcheck="false"
+            aria-describedby="ip-hint"
+          />
+          <span class="input-hint" id="ip-hint">Enter the base network address (dotted decimal)</span>
+        </div>
+
+        <!-- CIDR Prefix -->
+        <div class="form-group">
+          <label for="prefix-input">CIDR Prefix Length</label>
+          <input
+            type="text"
+            id="prefix-input"
+            placeholder="e.g. 24 or /24"
+            maxlength="3"
+            autocomplete="off"
+            spellcheck="false"
+            aria-describedby="prefix-hint"
+          />
+          <span class="input-hint" id="prefix-hint">Enter a value from /0 to /30</span>
+        </div>
+
+        <!-- Number of Subnets -->
+        <div class="form-group">
+          <label for="subnet-count">Number of Subnets</label>
+          <select id="subnet-count" aria-describedby="count-hint">
+            <option value="">— Select —</option>
+            <!-- Options populated by script.js -->
+          </select>
+          <span class="input-hint" id="count-hint">Choose how many subnets to create</span>
+        </div>
+
+      </div><!-- /form-grid -->
+
+      <!-- Action buttons -->
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="calculate()" aria-label="Calculate subnets">
+          ⚡ Calculate
+        </button>
+        <button class="btn btn-secondary" onclick="resetForm()" aria-label="Reset form">
+          ↺ Reset
+        </button>
+      </div>
+
+      <!-- Validation error message box (hidden by default) -->
+      <div class="error-box hidden" id="error-box" role="alert" aria-live="polite"></div>
+
+    </section><!-- /calculator card -->
+
+
+    <!-- ── RESULTS SECTION (hidden until calculation runs) ── -->
+    <section class="card hidden" id="results-section" aria-labelledby="results-heading">
+      <h2 class="card-title" id="results-heading">
+        <span class="icon" aria-hidden="true">📊</span>
+        Calculation Results
+      </h2>
+
+      <!-- Summary strip — four key metrics -->
+      <div class="summary-strip" role="list" aria-label="Network summary">
+
+        <div class="summary-card" role="listitem">
+          <div class="summary-label">Original Network</div>
+          <div class="summary-value" id="card-network">—</div>
+        </div>
+
+        <div class="summary-card" role="listitem">
+          <div class="summary-label">Subnet Mask</div>
+          <div class="summary-value" id="card-mask">—</div>
+        </div>
+
+        <div class="summary-card" role="listitem">
+          <div class="summary-label">Total Subnets</div>
+          <div class="summary-value" id="card-total-subnets">—</div>
+        </div>
+
+        <div class="summary-card" role="listitem">
+          <div class="summary-label">Usable Hosts / Subnet</div>
+          <div class="summary-value" id="card-hosts">—</div>
+        </div>
+
+      </div><!-- /summary-strip -->
+
+      <!-- Special note for /31 or /32 (hidden by default) -->
+      <div class="special-note hidden" id="special-note" role="note"></div>
+
+      <!-- Table header row with Copy button -->
+      <div class="results-header">
+        <span class="results-title">Subnet Details</span>
+        <button class="btn btn-copy" id="copy-btn" onclick="copyResults()" aria-label="Copy results to clipboard">
+          📋 Copy Results
+        </button>
+      </div>
+
+      <!-- Subnet details table -->
+      <div class="table-wrap">
+        <table aria-label="Subnet details table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Network / CIDR</th>
+              <th>Subnet Mask</th>
+              <th>Host Range</th>
+              <th>Broadcast</th>
+              <th>Total Addrs</th>
+              <th>Usable Hosts</th>
+            </tr>
+          </thead>
+          <tbody id="subnet-tbody">
+            <!-- Rows populated by script.js -->
+          </tbody>
+        </table>
+      </div><!-- /table-wrap -->
+
+    </section><!-- /results section -->
+
+
+    <!-- ── EDUCATION SECTION ────────────────────────────── -->
+    <section class="card edu-section" aria-labelledby="edu-heading">
+      <h2 class="card-title" id="edu-heading">
+        <span class="icon" aria-hidden="true">📚</span>
+        Understanding Subnetting
+      </h2>
+
+      <div class="edu-grid">
+
+        <!-- Card 1: IPv4 Address -->
+        <article class="edu-card">
+          <div class="edu-icon" aria-hidden="true">🌐</div>
+          <h3>What is an IPv4 Address?</h3>
+          <p>
+            An IPv4 address is a 32-bit number that uniquely identifies a device on a network.
+            It is written as four decimal numbers (octets) separated by dots, for example
+            <strong>192.168.1.10</strong>. Each octet ranges from 0 to 255.
+          </p>
+        </article>
+
+        <!-- Card 2: Subnet Mask -->
+        <article class="edu-card">
+          <div class="edu-icon" aria-hidden="true">🎭</div>
+          <h3>What Does a Subnet Mask Do?</h3>
+          <p>
+            A subnet mask is also a 32-bit number (e.g. <strong>255.255.255.0</strong>).
+            It separates the <em>network portion</em> of an IP address from the
+            <em>host portion</em>. Bits set to 1 belong to the network; bits set to 0
+            identify individual hosts within that network.
+          </p>
+        </article>
+
+        <!-- Card 3: CIDR -->
+        <article class="edu-card">
+          <div class="edu-icon" aria-hidden="true">📐</div>
+          <h3>What is CIDR Notation?</h3>
+          <p>
+            CIDR (Classless Inter-Domain Routing) notation writes the prefix length after a
+            slash, e.g. <strong>192.168.1.0/24</strong>. The number after the slash tells you
+            how many bits of the 32-bit address are the <em>network part</em>. A /24 means
+            the first 24 bits are fixed, leaving 8 bits (256 addresses) for hosts.
+          </p>
+        </article>
+
+        <!-- Card 4: Why Subnet? -->
+        <article class="edu-card">
+          <div class="edu-icon" aria-hidden="true">🔗</div>
+          <h3>Why is Subnetting Useful?</h3>
+          <p>
+            Subnetting divides a large network into smaller, isolated segments. This
+            <strong>reduces congestion</strong>, improves <strong>security</strong> by
+            separating departments, makes <strong>IP allocation</strong> more efficient,
+            and simplifies network management and troubleshooting.
+          </p>
+        </article>
+
+      </div><!-- /edu-grid -->
+    </section><!-- /education section -->
+
+  </main>
+
+  <!-- ══════════════════════════════════════════════════════
+       FOOTER
+       ══════════════════════════════════════════════════════ -->
+  <footer>
+    <strong>IPFORGE</strong> — IPv4 Subnetting Calculator &amp; Network Planning Tool &nbsp;|&nbsp;
+    Computer Networks College Project &nbsp;|&nbsp;
+    <span id="footer-year"></span>
+  </footer>
+
+  <!-- Load JavaScript (deferred so DOM is ready) -->
+  <script src="script.js"></script>
+
+  <!-- Set footer year dynamically -->
+  <script>
+    document.getElementById('footer-year').textContent = new Date().getFullYear();
+  </script>
+
+</body>
+</html>

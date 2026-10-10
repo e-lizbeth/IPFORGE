@@ -1,0 +1,518 @@
+/* ================================================================
+   IPFORGE — IPv4 Subnetting Calculator & Network Planning Tool
+   style.css  —  All visual styles, layout, and responsive design
+   ================================================================ */
+
+/* ──────────────────────────────────────────────────────────
+   DESIGN TOKENS / CSS CUSTOM PROPERTIES
+   ────────────────────────────────────────────────────────── */
+:root {
+  --cobalt:      #1a56db;   /* Primary cobalt blue accent  */
+  --cobalt-dark: #1340b0;   /* Darker shade for hover      */
+  --sky:         #38bdf8;   /* Sky blue highlight           */
+  --sky-light:   #e0f2fe;   /* Very light sky background   */
+  --bg:          #f0f7ff;   /* Page background              */
+  --surface:     #ffffff;   /* Card surface                 */
+  --border:      #cbd5e1;   /* Soft border grey             */
+  --text-dark:   #1e293b;   /* Main heading text            */
+  --text-body:   #334155;   /* Body / paragraph text        */
+  --text-muted:  #64748b;   /* Subdued labels               */
+  --success:     #16a34a;   /* Green for "Copied" feedback  */
+  --warning-bg:  #fefce8;
+  --warning-bdr: #fbbf24;
+  --error-bg:    #fef2f2;
+  --error-bdr:   #fca5a5;
+  --error-text:  #991b1b;
+  --radius:      12px;
+  --shadow:      0 2px 16px rgba(26, 86, 219, 0.08);
+  --shadow-lg:   0 4px 32px rgba(26, 86, 219, 0.13);
+  --transition:  0.18s ease;
+}
+
+/* ──────────────────────────────────────────────────────────
+   GLOBAL RESET & BASE
+   ────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Segoe UI', 'Inter', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text-body);
+  line-height: 1.6;
+  min-height: 100vh;
+  /* Subtle dot-grid background to evoke a network diagram */
+  background-image:
+    radial-gradient(circle, #bfdbfe 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* ──────────────────────────────────────────────────────────
+   NETWORK DECORATION — animated nodes on canvas
+   (Drawn by JS-free CSS only; we use a lightweight SVG)
+   ────────────────────────────────────────────────────────── */
+.net-deco {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.35;
+}
+
+/* ──────────────────────────────────────────────────────────
+   HEADER
+   ────────────────────────────────────────────────────────── */
+header {
+  background: linear-gradient(135deg, var(--cobalt) 0%, #2563eb 60%, var(--sky) 100%);
+  color: #fff;
+  padding: 2.5rem 1.5rem 2rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(26,86,219,0.18);
+}
+
+/* Decorative blobs in header */
+header::before,
+header::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+}
+header::before { width: 320px; height: 320px; top: -120px; left: -80px; }
+header::after  { width: 240px; height: 240px; bottom: -100px; right: -60px; }
+
+.header-logo {
+  font-size: clamp(2.4rem, 6vw, 4rem);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.18);
+  position: relative;
+  z-index: 1;
+}
+
+.header-logo span { color: var(--sky); }   /* accent on the "IP" part */
+
+.header-subtitle {
+  font-size: clamp(0.85rem, 2.2vw, 1.05rem);
+  color: rgba(255,255,255,0.88);
+  margin-top: 0.35rem;
+  letter-spacing: 0.04em;
+  position: relative;
+  z-index: 1;
+}
+
+/* Tiny network node icons in header */
+.header-nodes {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.node-dot {
+  position: absolute;
+  width: 8px; height: 8px;
+  background: rgba(255,255,255,0.5);
+  border-radius: 50%;
+}
+/* Place nodes at fixed positions */
+.node-dot:nth-child(1) { top: 18%; left: 8%;  }
+.node-dot:nth-child(2) { top: 70%; left: 14%; }
+.node-dot:nth-child(3) { top: 30%; left: 88%; }
+.node-dot:nth-child(4) { top: 75%; left: 82%; }
+.node-dot:nth-child(5) { top: 50%; left: 50%; width:5px; height:5px; }
+
+/* SVG lines connecting header nodes */
+.header-svg {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+}
+
+/* ──────────────────────────────────────────────────────────
+   MAIN LAYOUT WRAPPER
+   ────────────────────────────────────────────────────────── */
+main {
+  max-width: 960px;
+  margin: 2.5rem auto;
+  padding: 0 1rem 3rem;
+}
+
+/* ──────────────────────────────────────────────────────────
+   CALCULATOR CARD
+   ────────────────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 2rem;
+  border: 1px solid var(--border);
+}
+
+.card + .card { margin-top: 1.8rem; }
+
+.card-title {
+  font-size: 1.18rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 1.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-title .icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px; height: 32px;
+  background: var(--sky-light);
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+/* ──────────────────────────────────────────────────────────
+   FORM / INPUT GRID
+   ────────────────────────────────────────────────────────── */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.2rem;
+}
+
+.form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+
+label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+input[type="text"],
+select {
+  width: 100%;
+  padding: 0.65rem 0.9rem;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.97rem;
+  color: var(--text-dark);
+  background: var(--surface);
+  transition: border-color var(--transition), box-shadow var(--transition);
+  outline: none;
+  font-family: inherit;
+}
+
+input[type="text"]:focus,
+select:focus {
+  border-color: var(--cobalt);
+  box-shadow: 0 0 0 3px rgba(26,86,219,0.12);
+}
+
+input[type="text"]::placeholder { color: #94a3b8; }
+
+select { cursor: pointer; }
+
+/* Hint text below inputs */
+.input-hint {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+
+/* ──────────────────────────────────────────────────────────
+   ACTION BUTTONS
+   ────────────────────────────────────────────────────────── */
+.btn-row {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.6rem;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 0.68rem 1.6rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.97rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+  font-family: inherit;
+  letter-spacing: 0.02em;
+}
+
+.btn:active { transform: scale(0.97); }
+
+.btn-primary {
+  background: var(--cobalt);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(26,86,219,0.25);
+}
+.btn-primary:hover {
+  background: var(--cobalt-dark);
+  box-shadow: 0 4px 16px rgba(26,86,219,0.35);
+}
+
+.btn-secondary {
+  background: var(--sky-light);
+  color: var(--cobalt);
+  border: 2px solid #bfdbfe;
+}
+.btn-secondary:hover { background: #dbeafe; }
+
+.btn-copy {
+  background: var(--surface);
+  color: var(--cobalt);
+  border: 2px solid var(--border);
+  font-size: 0.88rem;
+  padding: 0.5rem 1.1rem;
+}
+.btn-copy:hover { background: var(--sky-light); border-color: var(--cobalt); }
+.btn-copy.copied { background: #dcfce7; border-color: #86efac; color: var(--success); }
+
+/* ──────────────────────────────────────────────────────────
+   ERROR BOX
+   ────────────────────────────────────────────────────────── */
+.error-box {
+  background: var(--error-bg);
+  border: 1.5px solid var(--error-bdr);
+  color: var(--error-text);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-top: 1.2rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.error-box::before { content: '⚠'; flex-shrink: 0; }
+
+/* ──────────────────────────────────────────────────────────
+   RESULTS SECTION
+   ────────────────────────────────────────────────────────── */
+
+/* Summary cards strip */
+.summary-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.6rem;
+}
+
+.summary-card {
+  background: linear-gradient(135deg, var(--sky-light) 0%, #f0f9ff 100%);
+  border: 1.5px solid #bae6fd;
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  text-align: center;
+}
+
+.summary-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--cobalt);
+  margin-bottom: 0.3rem;
+}
+
+.summary-value {
+  font-size: 1.18rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  word-break: break-all;
+}
+
+/* Special note (for /31, /32) */
+.special-note {
+  background: var(--warning-bg);
+  border: 1.5px solid var(--warning-bdr);
+  border-radius: 8px;
+  padding: 0.7rem 1rem;
+  font-size: 0.87rem;
+  color: #78350f;
+  margin-bottom: 1.2rem;
+}
+
+/* Results table header row */
+.results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.results-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+/* ──────────────────────────────────────────────────────────
+   SUBNET TABLE
+   ────────────────────────────────────────────────────────── */
+.table-wrap {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  min-width: 640px;
+}
+
+thead tr {
+  background: linear-gradient(90deg, var(--cobalt) 0%, #2563eb 100%);
+  color: #fff;
+}
+
+thead th {
+  padding: 0.75rem 0.9rem;
+  text-align: left;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+tbody tr { transition: background var(--transition); }
+tbody tr:nth-child(even) { background: #f8faff; }
+tbody tr:hover           { background: var(--sky-light); }
+
+tbody td {
+  padding: 0.72rem 0.9rem;
+  border-bottom: 1px solid #e2e8f0;
+  color: var(--text-body);
+  vertical-align: middle;
+}
+
+tbody tr:last-child td { border-bottom: none; }
+
+.td-index {
+  font-weight: 700;
+  color: var(--cobalt);
+  text-align: center;
+  width: 36px;
+}
+
+.num-cell { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Badge for network / broadcast addresses */
+.addr-badge {
+  display: inline-block;
+  background: #e0f2fe;
+  color: var(--cobalt);
+  border-radius: 5px;
+  padding: 0.18rem 0.55rem;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 0.84rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.addr-badge.bcast {
+  background: #fce7f3;
+  color: #9d174d;
+}
+
+.host-range {
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 0.83rem;
+  color: var(--text-body);
+}
+
+/* ──────────────────────────────────────────────────────────
+   EDUCATION SECTION
+   ────────────────────────────────────────────────────────── */
+.edu-section {
+  margin-top: 1.8rem;
+}
+
+.edu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.1rem;
+  margin-top: 1rem;
+}
+
+.edu-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 1.1rem 1.2rem;
+  transition: box-shadow var(--transition), border-color var(--transition);
+}
+.edu-card:hover {
+  box-shadow: var(--shadow-lg);
+  border-color: #bae6fd;
+}
+
+.edu-icon { font-size: 1.6rem; margin-bottom: 0.5rem; }
+
+.edu-card h3 {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--cobalt);
+  margin-bottom: 0.4rem;
+}
+
+.edu-card p {
+  font-size: 0.83rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+/* ──────────────────────────────────────────────────────────
+   FOOTER
+   ────────────────────────────────────────────────────────── */
+footer {
+  text-align: center;
+  padding: 1.5rem 1rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  margin-top: 2rem;
+}
+
+footer strong { color: var(--cobalt); }
+
+/* ──────────────────────────────────────────────────────────
+   UTILITY
+   ────────────────────────────────────────────────────────── */
+.hidden { display: none !important; }
+
+/* ──────────────────────────────────────────────────────────
+   RESPONSIVE BREAKPOINTS
+   ────────────────────────────────────────────────────────── */
+
+/* Tablet */
+@media (max-width: 768px) {
+  main   { margin-top: 1.5rem; }
+  .card  { padding: 1.4rem 1.1rem; }
+  .btn-row { flex-direction: column; }
+  .btn   { width: 100%; text-align: center; }
+  .header-logo { font-size: 2.4rem; }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  header { padding: 1.8rem 1rem 1.5rem; }
+  .header-logo { font-size: 2rem; letter-spacing: 0.05em; }
+  .summary-strip { grid-template-columns: 1fr 1fr; }
+  .edu-grid { grid-template-columns: 1fr; }
+  table { font-size: 0.8rem; }
+  .addr-badge { font-size: 0.76rem; }
+}
